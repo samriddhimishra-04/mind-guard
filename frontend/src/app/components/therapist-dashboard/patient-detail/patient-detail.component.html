@@ -1,0 +1,292 @@
+<div class="patient-detail-container">
+  <div class="detail-header">
+    <button class="btn-back" (click)="goBack()">← Back</button>
+
+    <div class="patient-header-info" *ngIf="patient">
+      <h1>{{ patient.patientName }}</h1>
+      <p class="patient-email">{{ patient.patientEmail }}</p>
+      <div class="patient-badges">
+        <span class="badge badge-assigned">Assigned: {{ patient.assignedAt | date:'MMM d, y' }}</span>
+        <span class="badge badge-status" [class.active]="patient.isActive">
+          {{ patient.isActive ? '✓ Active' : '✕ Inactive' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn-unassign" (click)="unassignPatient()" *ngIf="patient && patient.isActive">
+        Unassign Patient
+      </button>
+      <button class="btn-refresh" (click)="loadPatientData()">🔄 Refresh</button>
+    </div>
+  </div>
+
+  <div class="error-message" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <!-- Critical Alerts Alert -->
+  <div class="critical-alerts-banner" *ngIf="getCriticalAlerts().length > 0">
+    <span class="icon">⚠️</span>
+    <span class="message"><strong>{{ getCriticalAlerts().length }}</strong> critical alert(s) require immediate attention</span>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="tabs-navigation">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'overview'"
+      (click)="selectTab('overview')"
+    >
+      📊 Overview
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'entries'"
+      (click)="selectTab('entries')"
+    >
+      📔 Entries ({{ journalEntries.length }})
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'moods'"
+      (click)="selectTab('moods')"
+    >
+      😊 Moods ({{ moodLogs.length }})
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'alerts'"
+      (click)="selectTab('alerts')"
+    >
+      🔔 Alerts ({{ getUnresolvedAlerts().length }})
+    </button>
+  </div>
+
+  <!-- Overview Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'overview'">
+    <div class="overview-section">
+      <h2>Patient Overview</h2>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">{{ journalEntries.length }}</div>
+          <div class="stat-label">Journal Entries</div>
+          <div class="stat-subtext">Total entries</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-number">{{ moodLogs.length }}</div>
+          <div class="stat-label">Mood Logs</div>
+          <div class="stat-subtext">Total logs</div>
+        </div>
+
+        <div class="stat-card alert">
+          <div class="stat-number">{{ getCriticalAlerts().length }}</div>
+          <div class="stat-label">Critical Alerts</div>
+          <div class="stat-subtext">Unresolved</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-number">{{ getUnresolvedAlerts().length }}</div>
+          <div class="stat-label">All Alerts</div>
+          <div class="stat-subtext">Unresolved</div>
+        </div>
+      </div>
+
+      <!-- Patient Notes Section -->
+      <div class="notes-section">
+        <h3>Notes</h3>
+        <div class="notes-content" *ngIf="patient?.notes">
+          {{ patient?.notes }}
+        </div>
+        <div class="notes-empty" *ngIf="!patient?.notes">
+          <p>No notes added yet</p>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="recent-activity-section">
+        <h3>Recent Activity</h3>
+
+        <div class="activity-list">
+          <!-- Recent Entries -->
+          <div class="activity-group">
+            <h4>Latest Journal Entries</h4>
+            <div class="activity-items">
+              <div class="activity-item" *ngFor="let entry of journalEntries | slice:0:3">
+                <span class="activity-type">📔</span>
+                <div class="activity-details">
+                  <strong>{{ entry.title }}</strong>
+                  <p>{{ entry.content | slice:0:100 }}...</p>
+                  <small>{{ getTimeAgo(entry.createdAt) }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Moods -->
+          <div class="activity-group">
+            <h4>Latest Mood Logs</h4>
+            <div class="activity-items">
+              <div class="activity-item" *ngFor="let mood of moodLogs | slice:0:3">
+                <span class="activity-type">{{ getMoodEmoji(mood.mood) }}</span>
+                <div class="activity-details">
+                  <strong>{{ mood.mood }}</strong>
+                  <p>Intensity: {{ mood.intensityLevel }}/10</p>
+                  <small>{{ getTimeAgo(mood.createdAt) }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Entries Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'entries'">
+    <div class="entries-section">
+      <h2>Journal Entries</h2>
+
+      <div class="loading" *ngIf="loadingEntries">
+        <p>Loading entries...</p>
+      </div>
+
+      <div class="entries-list" *ngIf="!loadingEntries && journalEntries.length > 0">
+        <div class="entry-card" *ngFor="let entry of journalEntries">
+          <div class="entry-header">
+            <h3>{{ entry.title }}</h3>
+            <span class="entry-date">{{ entry.createdAt | date:'medium' }}</span>
+          </div>
+
+          <div class="entry-mood" *ngIf="entry.mood">
+            <span class="mood-tag">{{ entry.mood }}</span>
+          </div>
+
+          <p class="entry-content">{{ entry.content }}</p>
+
+          <div class="entry-analysis" *ngIf="entry.sentimentScore">
+            <div class="analysis-item">
+              <span class="label">Sentiment:</span>
+              <div class="score-bar">
+                <div class="score-fill" [style.width.%]="(entry.sentimentScore || 0) * 100"></div>
+              </div>
+              <span class="value">{{ (entry.sentimentScore || 0) * 100 | number:'1.0-0' }}%</span>
+            </div>
+
+            <div class="analysis-item" *ngIf="entry.distressLevel">
+              <span class="label">Distress Level:</span>
+              <div class="score-bar">
+                <div class="score-fill danger" [style.width.%]="(entry.distressLevel || 0) * 100"></div>
+              </div>
+              <span class="value">{{ (entry.distressLevel || 0) * 100 | number:'1.0-0' }}%</span>
+            </div>
+          </div>
+
+          <div class="entry-alert" *ngIf="entry.isFlagged">
+            <span class="alert-icon">⚠️</span>
+            <span>This entry was flagged for high distress</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="!loadingEntries && journalEntries.length === 0">
+        <p>No journal entries yet</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Moods Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'moods'">
+    <div class="moods-section">
+      <h2>Mood Logs</h2>
+
+      <div class="loading" *ngIf="loadingMoods">
+        <p>Loading mood logs...</p>
+      </div>
+
+      <div class="moods-list" *ngIf="!loadingMoods && moodLogs.length > 0">
+        <div class="mood-card" *ngFor="let mood of moodLogs">
+          <div class="mood-header">
+            <span class="mood-emoji">{{ getMoodEmoji(mood.mood) }}</span>
+            <div class="mood-info">
+              <h3>{{ mood.mood }}</h3>
+              <small>{{ mood.createdAt | date:'medium' }}</small>
+            </div>
+          </div>
+
+          <div class="mood-details" *ngIf="mood.intensityLevel">
+            <span class="label">Intensity Level:</span>
+            <div class="intensity-bar">
+              <div class="intensity-fill" [style.width.%]="(mood.intensityLevel || 0) * 10"></div>
+            </div>
+            <span class="value">{{ mood.intensityLevel }}/10</span>
+          </div>
+
+          <div class="mood-triggers" *ngIf="mood.triggers">
+            <span class="label">Triggers:</span>
+            <p>{{ mood.triggers }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="!loadingMoods && moodLogs.length === 0">
+        <p>No mood logs yet</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerts Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'alerts'">
+    <div class="alerts-section">
+      <h2>Patient Alerts</h2>
+
+      <div class="loading" *ngIf="loadingAlerts">
+        <p>Loading alerts...</p>
+      </div>
+
+      <div class="alerts-list" *ngIf="!loadingAlerts && patientAlerts.length > 0">
+        <div class="alert-card" *ngFor="let alert of patientAlerts" [style.borderLeftColor]="getAlertColor(alert.level)">
+          <div class="alert-header">
+            <div class="alert-title">
+              <span class="alert-level-badge" [style.backgroundColor]="getAlertColor(alert.level)">
+                {{ alert.level }}
+              </span>
+              <h3>{{ alert.description }}</h3>
+            </div>
+            <span class="alert-status-badge" [style.backgroundColor]="getStatusColor(alert.status)">
+              {{ alert.status }}
+            </span>
+          </div>
+
+          <div class="alert-body">
+            <p class="alert-triggered">Triggered by: <strong>{{ alert.triggeredBy || 'AI Analysis' }}</strong></p>
+
+            <div class="alert-meta">
+              <span class="meta-item">Created: {{ getTimeAgo(alert.createdAt) }}</span>
+              <span class="meta-item" *ngIf="alert.viewedAt">Viewed: {{ getTimeAgo(alert.viewedAt) }}</span>
+            </div>
+          </div>
+
+          <div class="alert-footer">
+            <button
+              class="btn-resolve"
+              (click)="resolveAlert(alert.id)"
+              *ngIf="alert.status !== 'RESOLVED'"
+            >
+              Mark as Resolved
+            </button>
+            <span class="resolved-label" *ngIf="alert.status === 'RESOLVED'">
+              ✓ Resolved {{ getTimeAgo(alert.resolvedAt!) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="!loadingAlerts && patientAlerts.length === 0">
+        <p>No alerts for this patient</p>
+      </div>
+    </div>
+  </div>
+</div>

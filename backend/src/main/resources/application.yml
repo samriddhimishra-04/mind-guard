@@ -1,0 +1,125 @@
+spring:
+  application:
+    name: mind-guard
+  main:
+    allow-circular-references: true
+
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:mindguard}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:root}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+
+  # JPA/Hibernate Configuration
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          fetch_size: 50
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # Security
+  security:
+    user:
+      name: admin
+      password: ${ADMIN_PASSWORD:admin123}
+    filter:
+      order: 5
+
+  # CORS Configuration
+  web:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:4201,http://localhost:4202}
+      allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+      allowed-headers: "*"
+      allow-credentials: true
+      max-age: 3600
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+  compression:
+    enabled: true
+    min-response-size: 1024
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.mindguard: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/mind-guard.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:mind-guard-super-secure-jwt-secret-key-that-is-at-least-64-chars-long-2024}
+  expiration: ${JWT_EXPIRATION:86400000}  # 24 hours in milliseconds
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7 days in milliseconds
+
+# Hugging Face Configuration
+huggingface:
+  api-key: ${HUGGINGFACE_API_KEY:<YOUR_HUGGING_FACE_API_KEY>}
+  api-url: https://api-inference.huggingface.co/models
+  timeout: 30000
+  models:
+    sentiment: distilbert-base-uncased-finetuned-sst-2-english
+    zero-shot: facebook/bart-large-mnli
+    summarization: facebook/bart-large-cnn
+    text-generation: gpt2
+
+# Application Configuration
+app:
+  name: Mind-Guard
+  version: 1.0.0
+  security:
+    encryption-key: ${ENCRYPTION_KEY:your_aes_key_min_32_chars_change_in_production}
+    enable-data-masking: true
+  features:
+    ai-analysis-enabled: true
+    auto-alert-escalation: true
+    rate-limiting-enabled: true
+
+# Actuator Configuration (Health, Metrics)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true

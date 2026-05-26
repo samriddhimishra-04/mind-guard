@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mood Logging Test</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+    button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    .success { color: green; }
+    .error { color: red; }
+    .info { color: blue; }
+    pre { background: #f0f0f0; padding: 10px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Mood Logging Test</h1>
+
+  <div class="section">
+    <h2>Step 1: Register Patient</h2>
+    <p>This tests if the backend returns a token</p>
+    <button onclick="registerPatient()">Register</button>
+    <div id="register-result"></div>
+  </div>
+
+  <div class="section">
+    <h2>Step 2: Check localStorage</h2>
+    <p>This checks if the token was saved</p>
+    <button onclick="checkStorage()">Check Storage</button>
+    <div id="storage-result"></div>
+  </div>
+
+  <div class="section">
+    <h2>Step 3: Log Mood (Direct Fetch)</h2>
+    <p>This tests if the token can be used to log a mood</p>
+    <button onclick="logMoodDirect()">Log Mood</button>
+    <div id="mood-result"></div>
+  </div>
+
+  <div class="section">
+    <h2>Step 4: Load Moods (Direct Fetch)</h2>
+    <p>This tests if we can retrieve moods with the token</p>
+    <button onclick="loadMoodsDirect()">Load Moods</button>
+    <div id="moods-result"></div>
+  </div>
+
+  <script>
+    let token = null;
+
+    function log(id, message, isError = false) {
+      const el = document.getElementById(id);
+      const className = isError ? 'error' : 'success';
+      el.innerHTML += `<p class="${className}">${message}</p>`;
+    }
+
+    function registerPatient() {
+      document.getElementById('register-result').innerHTML = '';
+      log('register-result', 'Registering...');
+
+      const timestamp = Date.now();
+      fetch('http://localhost:8081/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: `test_${timestamp}`,
+          email: `test_${timestamp}@test.com`,
+          password: 'Test@12345678',
+          firstName: 'Test',
+          lastName: 'User',
+          role: 'PATIENT'
+        })
+      })
+      .then(r => {
+        log('register-result', `Status: ${r.status} ${r.statusText}`);
+        return r.json();
+      })
+      .then(data => {
+        if (data.accessToken) {
+          token = data.accessToken;
+          log('register-result', '✅ Registration successful!');
+          log('register-result', `Token: ${token.substring(0, 50)}...`);
+          log('register-result', `User: ${data.user.username} (${data.user.id})`);
+
+          // Save to localStorage
+          localStorage.setItem('test_token', token);
+          localStorage.setItem('test_user', JSON.stringify(data.user));
+          log('register-result', '✅ Saved to localStorage');
+        } else {
+          log('register-result', '❌ No token in response', true);
+          log('register-result', JSON.stringify(data, null, 2));
+        }
+      })
+      .catch(err => log('register-result', `❌ ${err.message}`, true));
+    }
+
+    function checkStorage() {
+      document.getElementById('storage-result').innerHTML = '';
+
+      const storedToken = localStorage.getItem('test_token');
+      const storedUser = localStorage.getItem('test_user');
+
+      if (storedToken) {
+        log('storage-result', `✅ Token in localStorage: ${storedToken.substring(0, 50)}...`);
+        token = storedToken;
+      } else {
+        log('storage-result', '❌ No token in localStorage', true);
+      }
+
+      if (storedUser) {
+        log('storage-result', `✅ User in localStorage: ${storedUser}`);
+      } else {
+        log('storage-result', '❌ No user in localStorage', true);
+      }
+    }
+
+    function logMoodDirect() {
+      document.getElementById('mood-result').innerHTML = '';
+
+      if (!token) {
+        checkStorage();
+        if (!token) {
+          log('mood-result', '❌ No token available. Register first.', true);
+          return;
+        }
+      }
+
+      log('mood-result', `Using token: ${token.substring(0, 50)}...`);
+      log('mood-result', 'POSTing to /api/moods...');
+
+      fetch('http://localhost:8081/api/moods', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          mood: 'HAPPY',
+          intensityLevel: 7
+        })
+      })
+      .then(r => {
+        log('mood-result', `Status: ${r.status} ${r.statusText}`);
+        return r.json();
+      })
+      .then(data => {
+        if (data.id) {
+          log('mood-result', `✅ Mood logged! ID: ${data.id}`);
+          log('mood-result', `Response: ${JSON.stringify(data, null, 2)}`);
+        } else if (data.status === 401) {
+          log('mood-result', `❌ 401 Unauthorized`, true);
+          log('mood-result', `Message: ${data.message}`, true);
+        } else {
+          log('mood-result', `Response: ${JSON.stringify(data, null, 2)}`, true);
+        }
+      })
+      .catch(err => log('mood-result', `❌ ${err.message}`, true));
+    }
+
+    function loadMoodsDirect() {
+      document.getElementById('moods-result').innerHTML = '';
+
+      if (!token) {
+        checkStorage();
+        if (!token) {
+          log('moods-result', '❌ No token available. Register first.', true);
+          return;
+        }
+      }
+
+      log('moods-result', `Using token: ${token.substring(0, 50)}...`);
+      log('moods-result', 'GETing /api/moods...');
+
+      fetch('http://localhost:8081/api/moods', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(r => {
+        log('moods-result', `Status: ${r.status} ${r.statusText}`);
+        return r.json();
+      })
+      .then(data => {
+        if (Array.isArray(data)) {
+          log('moods-result', `✅ Retrieved ${data.length} moods`);
+          log('moods-result', `Data: ${JSON.stringify(data, null, 2)}`);
+        } else {
+          log('moods-result', `Response: ${JSON.stringify(data, null, 2)}`, true);
+        }
+      })
+      .catch(err => log('moods-result', `❌ ${err.message}`, true));
+    }
+
+    // On page load
+    window.onload = () => {
+      log('register-result', 'Click Register to start', false);
+    };
+  </script>
+</body>
+</html>

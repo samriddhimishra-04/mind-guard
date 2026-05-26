@@ -1,0 +1,48 @@
+# Node modules
+frontend/node_modules/
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build output
+backend/target/
+frontend/dist/
+frontend/build/
+frontend/.angular/
+
+# Logs
+*.log
+logs/
+backend/logs/
+frontend/logs/
+
+# Environment variables
+.env
+.env.local
+.env.example
+
+# Dependencies
+package-lock.json
+yarn.lock
+
+# Compiled Java classes
+*.class
+*.jar
+*.war
+
+# Maven
+.m2/
+
+# Database
+*.db
+*.sqlite
+
+# Temporary files
+*.tmp
+.cache/

@@ -1,0 +1,64 @@
+================================================================================
+DO THIS IN YOUR BROWSER RIGHT NOW - 5 MINUTES TOTAL
+================================================================================
+
+STEP 1: HARD REFRESH (30 seconds)
+---------------------------------
+1. Go to: http://localhost:4201
+2. Press: Ctrl+Shift+R (hard refresh)
+3. Wait 10 seconds
+4. You see: Login page
+
+
+STEP 2: OPEN DEVTOOLS (30 seconds)
+----------------------------------
+1. Press: F12
+2. Click: "Console" tab
+3. Clear: Click circle with slash (⊙)
+4. You see: Empty console
+
+
+STEP 3: REGISTER & WATCH CONSOLE (2 minutes)
+---------------------------------------------
+1. Click "Sign Up"
+2. Enter:
+   Username: testfinal001
+   Email: testfinal001@test.com
+   Password: Final@12345678
+   First Name: Test
+   Last Name: Final
+   Role: PATIENT
+3. Click "Register"
+4. WATCH CONSOLE FOR MESSAGES:
+
+   Look for: [AuthInterceptor]
+   Look for: [AuthService]
+   Look for: Token saved: true
+
+   If you see these: ✅ GOOD
+   If you see nothing: ❌ OLD CODE
+
+
+STEP 4: TEST MOOD (1 minute)
+----------------------------
+1. Clear console again (⊙)
+2. Click "Log Mood" on dashboard
+3. Select: Happy
+4. Intensity: 7
+5. Click "Log Mood"
+6. Watch console
+7. Look for: "Mood logged successfully"
+
+   If you see this: ✅ FIXED!
+   If you see 401: ❌ Still broken
+
+
+THEN TELL ME:
+=============
+1. Did you see [AuthInterceptor] messages? YES/NO
+2. Did you see [AuthService] messages? YES/NO
+3. Did mood logging work? YES/NO/ERROR
+
+Those three answers = everything!
+
+================================================================================

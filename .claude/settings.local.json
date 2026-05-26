@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk '{print $2}')",
+      "Bash(xargs kill -9)",
+      "Bash(npm start *)",
+      "Bash(\"/c/Program Files/JetBrains/IntelliJ IDEA Community Edition 2025.2.6.1/plugins/maven/lib/maven3/bin/mvn.cmd\" compile package -q -DskipTests)",
+      "Bash(java -cp target/classes:target/dependency/* com.mindguard.MindGuardApplication --server.port=8081 --spring.datasource.url=jdbc:postgresql://localhost:5432/mind_guard --spring.datasource.username=postgres --spring.datasource.password=postgres --huggingface.api.key=<YOUR_HUGGING_FACE_API_KEY>)",
+      "Bash(echo \"Backend PID: $!\")",
+      "Bash(curl -s -o /dev/null -w \"Status: %{http_code}\\\\n\" http://localhost:8081/api/auth/register)",
+      "Bash(\"/ c/Program Files/JetBrains/IntelliJ IDEA Community Edition 2025.2.6.1/plugins/maven/lib/maven3/bin/mvn.cmd\" clean -q)",
+      "Bash(\"/ c/Program Files/JetBrains/IntelliJ IDEA Community Edition 2025.2.6.1/plugins/maven/lib/maven3/bin/mvn.cmd\" package -q -DskipTests)",
+      "Bash(\"/c/Program Files/JetBrains/IntelliJ IDEA Community Edition 2025.2.6.1/plugins/maven/lib/maven3/bin/mvn.cmd\" clean package -DskipTests)",
+      "Bash(mvn clean *)",
+      "Bash(find / -name mvn -type f 2>/dev/null | head -3)",
+      "Read(//c//**)",
+      "Bash(pkill -f java)",
+      "Bash(pkill -f node)",
+      "Bash(kill -9 14152 16037 17183)",
+      "Bash(curl -s http://localhost:8081/api/auth/register)",
+      "Bash(sleep 5 && tail -20 /tmp/backend.log)",
+      "Read(//tmp/**)",
+      "Bash(awk 'NR>1 {print $2}')",
+      "Bash(curl -s http://localhost:4201)",
+      "Bash(curl -X POST http://localhost:8081/api/auth/register -H 'Content-Type: application/json' -d '{ *)"
+    ]
+  }
+}

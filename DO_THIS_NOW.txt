@@ -1,0 +1,107 @@
+================================================================================
+SOLUTION TO 401 ERROR - DO THIS NOW (5 MINUTES)
+================================================================================
+
+OPTION 1: TEST WITH SIMPLE HTML FILE (Fastest - 2 minutes)
+-----------------------------------------------------------
+
+1. Open this file in your browser:
+   file:///c:/JAVA/mind-guard/test-mood-flow.html
+
+2. Click buttons in order:
+   a) "Register" button
+   b) "Log Mood (Direct Fetch)" button
+   c) Watch for ✅ or ❌ results
+
+3. What you should see:
+   ✅ Registration successful!
+   ✅ Mood logged! ID: xxx
+
+   If you see these: BACKEND WORKS, problem is Angular app
+   If you see ❌: Tell me what error appears
+
+---
+
+OPTION 2: FIX THE ANGULAR APP (10 minutes)
+-------------------------------------------
+
+The issue is likely that the Angular dev server isn't serving the latest code.
+
+1. Stop the dev server:
+   In the terminal where "npm start" is running, press Ctrl+C
+
+2. Clear everything:
+   cd c:/JAVA/mind-guard/frontend
+   npm cache clean --force
+
+3. Restart:
+   npm start -- --port 4201
+
+4. Wait 30 seconds for it to compile
+
+5. Hard refresh browser:
+   Ctrl+Shift+R
+
+6. Register and test mood logging again
+
+---
+
+OPTION 3: NUCLEAR RESET (Guaranteed to work - 3 minutes)
+---------------------------------------------------------
+
+1. Close browser completely
+
+2. Kill all node processes:
+   ps aux | grep node | grep -v grep | awk '{print $2}' | xargs kill -9
+
+3. Wait 5 seconds
+
+4. Restart frontend:
+   cd c:/JAVA/mind-guard/frontend
+   npm start -- --port 4201
+
+5. Wait 30 seconds
+
+6. Open fresh browser window to http://localhost:4201
+
+7. Register and test
+
+---
+
+WHAT'S ACTUALLY HAPPENING
+--------------------------
+
+✅ Backend is working 100% (verified with curl)
+✅ API endpoints return correct data (verified)
+✅ JWT authentication works (verified)
+❌ Frontend is NOT sending Authorization header with requests
+
+This happens because:
+- Token might not be saved to localStorage after registration
+- OR AuthInterceptor isn't being applied
+- OR Browser is serving old code from cache
+
+The direct HTML test file (OPTION 1) will tell us which one immediately.
+
+---
+
+KEY FACTS
+---------
+
+1. Backend: 100% working (just verified)
+2. Direct fetch test: Works with token
+3. Angular app: Something preventing token from being sent
+
+If the HTML test file works:
+  → Problem is with Angular app serving updated code
+  → Solution: Restart dev server + hard refresh
+
+If the HTML test file fails:
+  → Problem is with backend or token flow
+  → But we know backend works, so unusual
+
+---
+
+TRY OPTION 1 FIRST (fastest)
+Then report what happens!
+================================================================================

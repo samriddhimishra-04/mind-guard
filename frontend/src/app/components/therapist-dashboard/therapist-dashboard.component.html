@@ -1,0 +1,241 @@
+<div class="therapist-dashboard-container">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <h1>Mind-Guard Therapist Portal</h1>
+    </div>
+    <div class="navbar-content">
+      <div class="user-info" *ngIf="currentUser">
+        <span class="welcome">Dr. {{ currentUser.lastName }}</span>
+        <button class="btn-logout" (click)="logout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="dashboard-content">
+    <!-- Critical Alerts Banner -->
+    <div class="critical-alerts-banner" *ngIf="criticalAlertsCount > 0">
+      <div class="banner-content">
+        <span class="icon">⚠️</span>
+        <span class="message"><strong>{{ criticalAlertsCount }}</strong> critical alert(s) require immediate attention</span>
+        <button class="btn-view" (click)="selectTab('alerts')">View Now</button>
+      </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs-navigation">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'dashboard'"
+        (click)="selectTab('dashboard')"
+      >
+        📊 Dashboard
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'patients'"
+        (click)="selectTab('patients')"
+      >
+        👥 Patients ({{ patientCount }})
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'alerts'"
+        (click)="selectTab('alerts')"
+      >
+        🔔 Alerts ({{ unresolvableAlertsCount }})
+      </button>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'dashboard'">
+      <div class="dashboard-overview">
+        <h2>Dashboard Overview</h2>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">{{ patientCount }}</div>
+            <div class="stat-label">Active Patients</div>
+            <div class="stat-subtext">Under your care</div>
+          </div>
+
+          <div class="stat-card alert">
+            <div class="stat-number critical">{{ criticalAlertsCount }}</div>
+            <div class="stat-label">Critical Alerts</div>
+            <div class="stat-subtext">Require action</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-number">{{ unresolvableAlertsCount }}</div>
+            <div class="stat-label">Unresolved Alerts</div>
+            <div class="stat-subtext">All severity levels</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-number">{{ (alerts | slice:0:5).length }}</div>
+            <div class="stat-label">Recent Alerts</div>
+            <div class="stat-subtext">Last 5</div>
+          </div>
+        </div>
+
+        <div class="recent-alerts-section">
+          <h3>Most Recent Alerts</h3>
+          <div class="recent-alerts-list">
+            <div class="alert-item" *ngFor="let alert of alerts | slice:0:5">
+              <div class="alert-level" [style.backgroundColor]="getAlertColor(alert.level)"></div>
+              <div class="alert-details">
+                <span class="alert-level-text">{{ alert.level }}</span>
+                <p class="alert-description">{{ alert.description }}</p>
+                <span class="alert-time">{{ getTimeAgo(alert.createdAt) }}</span>
+              </div>
+              <span class="alert-status" [ngClass]="getStatusBadgeClass(alert.status)">
+                {{ alert.status }}
+              </span>
+            </div>
+          </div>
+          <button class="btn-view-all" (click)="selectTab('alerts')">View All Alerts →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Patients Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'patients'">
+      <div class="patients-section">
+        <h2>Your Patients</h2>
+
+        <div class="search-bar">
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            [(ngModel)]="patientSearch"
+            class="search-input"
+          />
+          <span class="search-icon">🔍</span>
+        </div>
+
+        <div class="loading" *ngIf="patientsLoading">
+          <p>Loading patients...</p>
+        </div>
+
+        <div class="error-message" *ngIf="patientsError">
+          {{ patientsError }}
+        </div>
+
+        <div class="patients-list" *ngIf="!patientsLoading && getFilteredPatients().length > 0">
+          <div class="patient-card" *ngFor="let patient of getFilteredPatients()" (click)="viewPatientDetail(patient.patientId)">
+            <div class="patient-header">
+              <div class="patient-info">
+                <h3>{{ patient.patientName }}</h3>
+                <p class="patient-email">{{ patient.patientEmail }}</p>
+              </div>
+              <div class="patient-alerts" *ngIf="patient.activeAlertsCount > 0">
+                <span class="alert-badge">{{ patient.activeAlertsCount }} alert{{ patient.activeAlertsCount !== 1 ? 's' : '' }}</span>
+              </div>
+            </div>
+
+            <div class="patient-meta">
+              <span class="assigned-date">Assigned: {{ patient.assignedAt | date:'short' }}</span>
+              <span class="status" [class.active]="patient.isActive">
+                {{ patient.isActive ? '✓ Active' : '✕ Inactive' }}
+              </span>
+            </div>
+
+            <div class="patient-notes" *ngIf="patient.notes">
+              <small>{{ patient.notes }}</small>
+            </div>
+
+            <div class="patient-footer">
+              <button class="btn-view-patient" (click)="viewPatientDetail(patient.patientId); $event.stopPropagation()">
+                View Details →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="!patientsLoading && getFilteredPatients().length === 0">
+          <p>{{ patientSearch.trim() ? 'No patients match your search' : 'No patients assigned yet' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'alerts'">
+      <div class="alerts-section">
+        <h2>Patient Alerts</h2>
+
+        <div class="filters-bar">
+          <div class="filter-group">
+            <label>Status:</label>
+            <select [(ngModel)]="alertStatusFilter" (change)="onStatusFilterChange()" class="filter-select">
+              <option value="">All Status</option>
+              <option value="NEW">New</option>
+              <option value="REVIEWED">Reviewed</option>
+              <option value="ACKNOWLEDGED">Acknowledged</option>
+              <option value="RESOLVED">Resolved</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Level:</label>
+            <select [(ngModel)]="alertLevelFilter" (change)="onLevelFilterChange()" class="filter-select">
+              <option value="">All Levels</option>
+              <option value="CRITICAL">Critical</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
+            </select>
+          </div>
+
+          <button class="btn-refresh" (click)="loadAlerts()">🔄 Refresh</button>
+        </div>
+
+        <div class="loading" *ngIf="alertsLoading">
+          <p>Loading alerts...</p>
+        </div>
+
+        <div class="error-message" *ngIf="alertsError">
+          {{ alertsError }}
+        </div>
+
+        <div class="alerts-list" *ngIf="!alertsLoading && filteredAlerts.length > 0">
+          <div class="alert-card" *ngFor="let alert of filteredAlerts" [style.borderLeftColor]="getAlertColor(alert.level)">
+            <div class="alert-header">
+              <div class="alert-title-section">
+                <span class="alert-level-badge" [style.backgroundColor]="getAlertColor(alert.level)">
+                  {{ alert.level }}
+                </span>
+                <h3>{{ alert.description }}</h3>
+              </div>
+              <span class="alert-status-badge" [ngClass]="getStatusBadgeClass(alert.status)">
+                {{ alert.status }}
+              </span>
+            </div>
+
+            <div class="alert-body">
+              <p class="alert-triggered">Triggered by: <strong>{{ alert.triggeredBy || 'AI Analysis' }}</strong></p>
+
+              <div class="alert-meta">
+                <span class="meta-item">
+                  <strong>Created:</strong> {{ getTimeAgo(alert.createdAt) }}
+                </span>
+                <span class="meta-item" *ngIf="alert.viewedAt">
+                  <strong>Viewed:</strong> {{ getTimeAgo(alert.viewedAt) }}
+                </span>
+                <span class="meta-item" *ngIf="alert.resolvedAt">
+                  <strong>Resolved:</strong> {{ getTimeAgo(alert.resolvedAt) }}
+                </span>
+              </div>
+            </div>
+
+            <div class="alert-footer">
+              <button class="btn-view-alert">View & Resolve →</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="!alertsLoading && filteredAlerts.length === 0">
+          <p>No alerts match the selected filters</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

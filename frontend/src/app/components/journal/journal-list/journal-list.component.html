@@ -1,0 +1,43 @@
+<div class="journal-list-container">
+  <div class="header">
+    <h2>My Journal Entries</h2>
+    <a href="/journal/new" class="btn-new-entry">+ New Entry</a>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <p>Loading entries...</p>
+  </div>
+
+  <div class="error-message" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <div class="entries-container" *ngIf="!loading && entries.length > 0">
+    <div class="entry-card" *ngFor="let entry of entries" (click)="viewEntry(entry.id)">
+      <div class="entry-header">
+        <h3>{{ entry.title }}</h3>
+        <div class="entry-meta">
+          <span class="date">{{ formatDate(entry.createdAt) }}</span>
+          <span class="mood" *ngIf="entry.mood">{{ entry.mood }}</span>
+          <span class="risk-badge" [ngClass]="'risk-' + getRiskLevel(entry.distressLevel)" *ngIf="entry.isFlagged">
+            ⚠️ Flagged
+          </span>
+        </div>
+      </div>
+
+      <p class="entry-preview">{{ entry.content.substring(0, 150) }}...</p>
+
+      <div class="entry-footer">
+        <div class="analysis-info" *ngIf="entry.sentimentScore">
+          <small>Sentiment: {{ (entry.sentimentScore * 100 | number: '1.0-0') }}%</small>
+        </div>
+        <button class="btn-delete" (click)="deleteEntry(entry.id, $event)">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && entries.length === 0">
+    <p>No journal entries yet. Start by creating your first entry!</p>
+    <a href="/journal/new" class="btn btn-primary">Create Entry</a>
+  </div>
+</div>

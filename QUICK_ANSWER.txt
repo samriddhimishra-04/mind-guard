@@ -1,0 +1,38 @@
+YOUR 401 PROBLEM - THE ANSWER IN 30 SECONDS
+============================================
+
+The reason you're getting 401:
+The frontend is NOT sending the Authorization header with requests.
+
+Why this happens:
+One of two things:
+A) Token not saved to localStorage
+B) Frontend code not sending the token
+
+How to find out which:
+
+OPEN BROWSER CONSOLE (F12) AND TYPE:
+  localStorage.getItem('accessToken')
+
+RESULT:
+  - null (nothing) → Token not saved → Problem A
+  - Long string starting with eyJhbGc → Token exists → Problem B
+
+THEN TELL ME WHICH ONE YOU SAW.
+
+If A (null):
+  - Registration didn't save token
+  - Try registering again
+  - Make sure password is: 12+ chars, uppercase, lowercase, number, special char
+
+If B (JWT string):
+  - Token exists but not being sent
+  - Restart dev server:
+    ps aux | grep node | grep -v grep | awk '{print $2}' | xargs kill -9
+    sleep 5
+    cd c:/JAVA/mind-guard/frontend
+    npm start -- --port 4201
+    (wait 30 seconds)
+  - Hard refresh: Ctrl+Shift+R
+
+That's it. Tell me which one (A or B) and I'll fix it.
